@@ -1,0 +1,99 @@
+plugins {
+    id 'java'
+}
+
+group 'jbehave-spring-selenium-fluent'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+task upgradeGradle(type: Wrapper) {
+    gradleVersion = '5.0'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-bin.zip"
+}
+
+/**
+ * to prevent compilation error " unmappable character for encoding Cp1250"
+ */
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+javadoc.options.encoding = 'UTF-8'
+
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    testCompile group: 'org.jbehave', name: 'jbehave-core', version: '4.3.5'
+    testCompile group: 'org.jbehave.site', name: 'jbehave-site-resources', version: '3.3.1', ext: 'zip'
+    testCompile group: 'org.jbehave', name: 'jbehave-spring', version: '4.3.5'
+
+    testCompile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.141.59'
+    testCompile group: 'org.seleniumhq.selenium.fluent', name: 'fluent-selenium', version: '1.20'
+
+}
+
+def jarPath(String jarName) {
+    configurations.testCompile.find({
+        it.name.startsWith(jarName) })
+}
+
+task copyStylesForReports(type: Copy)
+copyStylesForReports{
+    copy {
+        from(zipTree(jarPath('jbehave-core'))) {
+            include 'style/*'
+        }
+        into('reports/jbehave/view')
+    }
+    copy {
+        from(zipTree(jarPath('jbehave-site-resources'))) {
+            include 'js/**/*'
+            include 'style/**/*'
+            include 'images/*'
+        }
+        into("reports/jbehave/view")
+    }
+}
+
+task deleteJBehaveReports(type: Delete) {
+    dependsOn(clean)
+    
+    delete 'out'
+    delete fileTree('reports/jbehave/screenshots/') {
+        include '*.png'
+    }
+    delete fileTree('reports/jbehave') {
+        include '*.html', '*.props', '*.stats', '*.txt', '*.xml'
+    }
+    delete fileTree('reports/jbehave/view') {
+        include '*.html'
+    }
+}
+
+/**
+ * to run JBehave tests with custom runTests task and with default browser, type:
+ * 'runTests'
+ * 
+ * to run JBehave tests with custom runTests task and with chosen browser, type:
+ * '-Dbrowser=chrome runTests'
+ * '-Dbrowser=firefox runTests'
+ * '-Dbrowser=chromeHeadless runTests'
+ * '-Dbrowser=iexplorer runTests'
+ * 
+ * to run JBehave tests with chosen browser, type:
+ * 'clean -Dbrowser=chrome test'
+ * 'clean -Dbrowser=firefox test'
+ * 'clean -Dbrowser=chromeHeadless test'
+ * 'clean -Dbrowser=iexplorer test'
+ */
+task runTests (type: Test){
+    dependsOn(clean)
+    dependsOn(copyStylesForReports)
+    dependsOn(deleteJBehaveReports)
+    systemProperty "browser", System.getProperty("browser")
+}
+

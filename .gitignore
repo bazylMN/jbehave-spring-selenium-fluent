@@ -1,0 +1,16 @@
+view/
+out/
+.gradle/
+gradle/
+.idea/
+gradlew
+gradlew.bat
+*.exe
+build
+reports/jbehave/view
+reports/jbehave/*.html
+reports/jbehave/*.txt
+reports/jbehave/*.stats
+reports/jbehave/*.xml
+reports/jbehave/*.props
+reports/jbehave/screenshots/*.png
